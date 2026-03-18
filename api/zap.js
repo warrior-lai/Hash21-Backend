@@ -9,6 +9,14 @@ const ARTIST_LN = {
   'guadis': 'crustycoil11@walletofsatoshi.com',  // TODO: replace
 };
 
+// Artist Nostr pubkeys (hex)
+const ARTIST_NOSTR = {
+  'lai': 'a78a391888c6a7a2e114ad66dc0e473b9f561734c7f098c9552b2e5bb840d26c',
+  'roxy': 'a78a391888c6a7a2e114ad66dc0e473b9f561734c7f098c9552b2e5bb840d26c',   // TODO: replace
+  'martu': 'a78a391888c6a7a2e114ad66dc0e473b9f561734c7f098c9552b2e5bb840d26c',   // TODO: replace
+  'guadis': 'a78a391888c6a7a2e114ad66dc0e473b9f561734c7f098c9552b2e5bb840d26c',  // TODO: replace
+};
+
 // Obra → artist mapping
 const OBRA_ARTIST = {
   'the-rabbit': 'lai',
@@ -64,6 +72,9 @@ module.exports = async function handler(req, res) {
       'wss://relay.primal.net'
     ];
 
+    // p tag = recipient's Nostr pubkey (artist), not the wallet service
+    const artistPubkey = ARTIST_NOSTR[artist] || ARTIST_NOSTR['lai'];
+    
     const zapRequest = {
       kind: 9734,
       created_at: Math.floor(Date.now() / 1000),
@@ -71,7 +82,7 @@ module.exports = async function handler(req, res) {
       tags: [
         ['relays', ...relays],
         ['amount', amountMsat.toString()],
-        ['p', lnurlData.nostrPubkey],
+        ['p', artistPubkey],
       ],
     };
 
