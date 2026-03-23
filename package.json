@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.100.0",
     "nostr-tools": "^1.17.0",
     "ws": "^8.16.0"
   }
