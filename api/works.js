@@ -18,6 +18,9 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const { artist_id, title_es } = req.body;
+      if (!artist_id) return res.status(400).json({ error: 'artist_id is required' });
+      if (!title_es || typeof title_es !== 'string') return res.status(400).json({ error: 'title_es is required' });
       const { data, error } = await supabase.from('works').insert(req.body).select().single();
       if (error) return res.status(400).json({ error: error.message });
       return res.status(201).json(data);

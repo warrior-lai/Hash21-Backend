@@ -17,6 +17,11 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const { name_es } = req.body;
+      if (!name_es || typeof name_es !== 'string') return res.status(400).json({ error: 'name_es is required' });
+      if (req.body.price_sats !== null && req.body.price_sats !== undefined && (typeof req.body.price_sats !== 'number' || req.body.price_sats < 0)) {
+        return res.status(400).json({ error: 'price_sats must be a positive number or null' });
+      }
       const { data, error } = await supabase.from('products').insert(req.body).select().single();
       if (error) return res.status(400).json({ error: error.message });
       return res.status(201).json(data);

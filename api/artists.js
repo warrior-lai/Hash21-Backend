@@ -20,6 +20,9 @@ module.exports = async function handler(req, res) {
 
     // POST — create artist
     if (req.method === 'POST') {
+      const { name, slug } = req.body;
+      if (!name || typeof name !== 'string' || name.length < 1) return res.status(400).json({ error: 'Name is required' });
+      if (!slug || typeof slug !== 'string' || !/^[a-z0-9\-]+$/.test(slug)) return res.status(400).json({ error: 'Valid slug is required (lowercase, no spaces)' });
       const { data, error } = await supabase.from('artists').insert(req.body).select().single();
       if (error) return res.status(400).json({ error: error.message });
       return res.status(201).json(data);

@@ -44,12 +44,19 @@ module.exports = async function handler(req, res) {
 
   try {
     const { target, amount, message } = req.body;
-    if (!target || !amount || amount < 1) {
-      return res.status(400).json({ error: 'Missing target or amount' });
+    
+    // Input validation
+    if (!target || typeof target !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid target' });
     }
+    if (!amount || typeof amount !== 'number' || amount < 1 || amount > 100000000) {
+      return res.status(400).json({ error: 'Missing or invalid amount (1-100000000 sats)' });
+    }
+    const sanitizedTarget = target.replace(/[^a-zA-Z0-9\-_]/g, '').substring(0, 100);
+    const sanitizedMessage = message ? String(message).substring(0, 255) : '';
 
     // Determine artist
-    const artist = OBRA_ARTIST[target] || target;
+    const artist = OBRA_ARTIST[sanitizedTarget] || sanitizedTarget;
     const lnAddress = ARTIST_LN[artist] || ARTIST_LN['lai'];
 
     // Resolve Lightning Address
@@ -78,7 +85,7 @@ module.exports = async function handler(req, res) {
     const zapRequest = {
       kind: 9734,
       created_at: Math.floor(Date.now() / 1000),
-      content: message || '',
+      content: sanitizedMessage,
       tags: [
         ['relays', ...relays],
         ['amount', amountMsat.toString()],
@@ -93,7 +100,7 @@ module.exports = async function handler(req, res) {
     const encodedZap = encodeURIComponent(JSON.stringify(signedZapRequest));
     let callbackUrl = `${lnurlData.callback}?amount=${amountMsat}&nostr=${encodedZap}`;
     if (message && lnurlData.commentAllowed > 0) {
-      callbackUrl += `&comment=${encodeURIComponent(message)}`;
+      callbackUrl += `&comment=${encodeURIComponent(sanitizedMessage)}`;
     }
 
     const invoiceRes = await fetch(callbackUrl);

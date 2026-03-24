@@ -82,3 +82,34 @@ echo "  Total: $TOTAL | ✅ $PASS passed | ❌ $FAIL failed"
 [ "$FAIL" -eq 0 ] && echo "  🏆 All tests passed!" || echo "  ⚠️ $FAIL test(s) failed"
 echo ""
 exit $FAIL
+
+# Input validation tests
+echo "🛡️ Input Validation"
+R=$(curl -s -X POST "$API/zap" -H "Content-Type: application/json" -d '{"target":"libertad","amount":-1}')
+echo "$R" | grep -q '"error"' && pass "POST /zap negative amount → rejected" || fail "POST /zap negative amount accepted"
+
+R=$(curl -s -X POST "$API/zap" -H "Content-Type: application/json" -d '{"target":"libertad","amount":999999999}')
+echo "$R" | grep -q '"error"' && pass "POST /zap huge amount → rejected" || fail "POST /zap huge amount accepted"
+
+R=$(curl -s -X POST "$API/artists" -H "Content-Type: application/json" -d '{"name":"Test","slug":"BAD SLUG!"}')
+echo "$R" | grep -q '"error"' && pass "POST /artists bad slug → rejected" || fail "POST /artists bad slug accepted"
+
+R=$(curl -s -X POST "$API/artists" -H "Content-Type: application/json" -d '{"slug":"test"}')
+echo "$R" | grep -q '"error"' && pass "POST /artists no name → rejected" || fail "POST /artists no name accepted"
+
+R=$(curl -s -X POST "$API/works" -H "Content-Type: application/json" -d '{"title_es":"test"}')
+echo "$R" | grep -q '"error"' && pass "POST /works no artist_id → rejected" || fail "POST /works no artist accepted"
+
+# Zap logging
+echo "📝 Zap Logging"
+R=$(curl -s -X POST "$API/log-zap" -H "Content-Type: application/json" -d '{"target_type":"work","target_id":"test-obra","amount_sats":21,"message":"test"}')
+echo "$R" | grep -q '"id"' && pass "POST /log-zap → logged" || fail "POST /log-zap"
+
+R=$(curl -s "$API/log-zap?target_id=test-obra")
+echo "$R" | grep -q '"total_sats"' && pass "GET /log-zap → stats returned" || fail "GET /log-zap"
+
+R=$(curl -s -X POST "$API/log-zap" -H "Content-Type: application/json" -d '{}')
+echo "$R" | grep -q '"error"' && pass "POST /log-zap {} → rejected" || fail "POST /log-zap {} accepted"
+
+R=$(curl -s -X POST "$API/log-zap" -H "Content-Type: application/json" -d '{"target_type":"invalid","target_id":"x","amount_sats":1}')
+echo "$R" | grep -q '"error"' && pass "POST /log-zap invalid type → rejected" || fail "POST /log-zap invalid type accepted"

@@ -26,7 +26,19 @@ Serverless en Vercel + Supabase (PostgreSQL + Storage + Auth). Firma zap request
 | 47 automated tests | ✅ Live | 28 frontend + 19 backend |
 | Staging environment | ✅ Live | staging.hash21.studio |
 
-## 🔜 Roadmap (próximos meses)
+## 🔜 Roadmap — Multi-Hackathon
+
+Hash21 es un proyecto que crece con el programa de hackathons de La Crypta:
+
+| Hackathon | Mes | Tema | Hash21 Feature |
+|-----------|-----|------|---------------|
+| ✅ FOUNDATIONS | Marzo | Lightning Payments | NIP-57 zaps, LNURL-pay, WebLN |
+| 🔜 IDENTITY | Abril | Nostr Social | Perfiles Nostr para artistas, firma con nsec |
+| 🔜 ZAPS | Mayo | Lightning + Nostr | Zap splits, zap rankings, social zaps |
+| 🔜 COMMERCE | Junio | Stores & Checkout | E-commerce completo, stock, envío |
+| 🔜 MEDIA | Julio | Decentralized Storage | Obras en IPFS/Nostr, permanencia descentralizada |
+
+## Roadmap técnico (próximos meses)
 
 | Feature | Prioridad | Descripción |
 |---------|-----------|-------------|
@@ -320,14 +332,45 @@ Hash21 certifica obras de arte en la blockchain de Bitcoin usando OpenTimestamps
 - Es un **certificado de registro** vinculado a un bloque específico
 - Prueba de existencia en el tiempo, permanente e incensurable
 
+**Proceso técnico detallado:**
+```
+1. Artista sube obra (imagen original)
+2. Se calcula SHA-256 del archivo:
+   sha256sum obra.jpg → de7c5e1b...7be44d
+3. Hash se envía a OpenTimestamps:
+   ots stamp hash.txt → hash.txt.ots
+4. OTS agrega el hash a un árbol Merkle
+5. La raíz del árbol se incluye en una tx de Bitcoin
+6. Se mina el bloque → hash anclado permanentemente
+7. Se genera certificado PDF con:
+   - Hash de la obra
+   - Número de bloque
+   - Timestamp
+   - Instrucciones de verificación
+```
+
+**Verificación independiente:**
+```bash
+# Cualquiera puede verificar:
+ots verify hash.txt.ots
+# Output: "Success! Bitcoin block 936387 attests existence as of 2026-02-13"
+```
+
 **Certificados emitidos:**
 
-| Obra | Bloque | SHA-256 |
-|------|--------|---------|
-| The Rabbit | #936387 | de7c5e1b...7be44d |
-| Libertad | #936793 | (registrado) |
+| Obra | Bloque | SHA-256 | Fecha |
+|------|--------|---------|-------|
+| The Rabbit | #936387 | de7c5e1b...7be44d | 2026-02-13 |
+| Libertad | #936793 | (registrado) | 2026-02-14 |
 
 **Verificación pública:** [hash21.studio/verify](https://hash21.studio/verify)
+
+**¿Por qué OpenTimestamps y no Ethereum/NFTs?**
+- Bitcoin es la blockchain más segura y longeva del mundo
+- No requiere smart contracts ni gas fees
+- El timestamp es tan permanente como la red Bitcoin misma
+- OpenTimestamps es estándar abierto, no depende de ninguna empresa
+- Costo: prácticamente gratis (se comparte tx entre miles de timestamps)
 
 ---
 
