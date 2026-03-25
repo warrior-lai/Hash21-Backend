@@ -46,18 +46,23 @@ module.exports = async function handler(req, res) {
       ];
       
       let submitted = false;
+      const hashBytes = Buffer.from(hash, 'hex');
       for (const calendar of otsCalendars) {
         try {
           const otsRes = await fetch(calendar, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: Buffer.from(hash, 'hex')
+            headers: { 'Content-Type': 'application/octet-stream' },
+            body: hashBytes
           });
           if (otsRes.ok) {
             submitted = true;
+            console.log('OTS submitted to:', calendar);
             break;
           }
-        } catch(e) { continue; }
+        } catch(e) { 
+          console.log('OTS error:', calendar, e.message);
+          continue; 
+        }
       }
       
       // Update work in DB
