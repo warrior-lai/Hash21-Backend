@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
     }
 
     // Decode nsec from env (fallback for initial deploy)
-    const nsecKey = process.env.HASH21_NOSTR_NSEC || 'nsec1p5e0dap9ftywqw8tsxtrc0urxexcntjmeqf7jghvp4h8pm5yh2nqsgvhwk';
+    const nsecKey = process.env.HASH21_NOSTR_NSEC;
     if (!nsecKey) return res.status(500).json({ error: 'Server Nostr key not configured' });
     const { data: secretKey } = nip19.decode(nsecKey);
 
