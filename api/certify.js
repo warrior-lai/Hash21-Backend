@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
 
   // POST — initiate certification (calculate hash + submit to OTS)
   if (req.method === 'POST') {
-    const { work_id, image_url } = req.body;
+    const { work_id, image_url, force } = req.body;
     
     if (!work_id) return res.status(400).json({ error: 'work_id is required' });
     
@@ -22,21 +22,29 @@ module.exports = async function handler(req, res) {
         .single();
       
       if (workErr || !work) return res.status(404).json({ error: 'Work not found' });
-      if (work.certificate_status === 'certified') {
+      
+      // Block if already certified (unless force for re-submit of pending)
+      if (work.certificate_status === 'certified' && !force) {
         return res.status(400).json({ error: 'Work already certified', hash: work.certificate_hash, block: work.certificate_block });
       }
       
-      // Calculate SHA-256 of the image
-      const imgUrl = image_url || work.image_url;
-      if (!imgUrl) return res.status(400).json({ error: 'No image URL for this work' });
+      let hash;
       
-      // Fetch image and hash it
-      const fullUrl = imgUrl.startsWith('http') ? imgUrl : `https://hash21.studio${imgUrl}`;
-      const imgRes = await fetch(fullUrl);
-      if (!imgRes.ok) return res.status(500).json({ error: 'Could not fetch image' });
-      
-      const buffer = await imgRes.arrayBuffer();
-      const hash = crypto.createHash('sha256').update(Buffer.from(buffer)).digest('hex');
+      // If forcing re-submit and hash exists, reuse it
+      if (force && work.certificate_hash) {
+        hash = work.certificate_hash;
+      } else {
+        // Calculate SHA-256 of the image
+        const imgUrl = image_url || work.image_url;
+        if (!imgUrl) return res.status(400).json({ error: 'No image URL for this work' });
+        
+        const fullUrl = imgUrl.startsWith('http') ? imgUrl : `https://hash21.studio${imgUrl}`;
+        const imgRes = await fetch(fullUrl);
+        if (!imgRes.ok) return res.status(500).json({ error: 'Could not fetch image' });
+        
+        const buffer = await imgRes.arrayBuffer();
+        hash = crypto.createHash('sha256').update(Buffer.from(buffer)).digest('hex');
+      }
       
       // Submit to OpenTimestamps calendar servers
       const otsCalendars = [
@@ -56,13 +64,9 @@ module.exports = async function handler(req, res) {
           });
           if (otsRes.ok) {
             submitted = true;
-            console.log('OTS submitted to:', calendar);
             break;
           }
-        } catch(e) { 
-          console.log('OTS error:', calendar, e.message);
-          continue; 
-        }
+        } catch(e) { continue; }
       }
       
       // Update work in DB
@@ -82,6 +86,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         hash: hash,
         status: submitted ? 'pending' : 'hash_only',
+        resubmitted: !!force,
         message: submitted 
           ? 'Hash submitted to OpenTimestamps. Will be anchored in a Bitcoin block within hours.'
           : 'Hash calculated. Manual OTS submission needed.',
