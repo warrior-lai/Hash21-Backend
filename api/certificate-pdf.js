@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   
   @page { 
-    size: A4; 
+    size: 250mm 250mm; 
     margin: 0; 
   }
   
@@ -50,18 +50,21 @@ module.exports = async function handler(req, res) {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px;
+    padding: 30px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   
   .cert {
-    width: 100%;
-    max-width: 650px;
+    width: 250mm;
+    height: 250mm;
     background: #ffffff;
     position: relative;
-    padding: 70px 60px;
+    padding: 50px;
     box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
   
   /* Elegant border */
