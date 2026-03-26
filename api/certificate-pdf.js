@@ -69,13 +69,16 @@ module.exports = async function handler(req, res) {
   
   <div class="hash">${work.certificate_hash}</div>
   
-  <div class="seal">₿</div>
+  <div class="qr-section" style="text-align:center;margin:30px 0;">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://hash21.studio/verify/?hash=${work.certificate_hash}" alt="QR Verificación" style="width:120px;height:120px;">
+    <div style="font-size:10px;color:#999;margin-top:8px;">Escaneá para verificar</div>
+  </div>
   
   <div class="footer">
     Este certificado prueba que el archivo digital de la obra existía<br>
     en la fecha indicada, anclado en la blockchain de Bitcoin via OpenTimestamps.<br>
     No certifica autoría — certifica existencia en el tiempo.<br><br>
-    <a class="verify" href="https://hash21.studio/verify">Verificar en hash21.studio/verify</a><br><br>
+    <a class="verify" href="https://hash21.studio/verify/?hash=${work.certificate_hash}">Verificar en hash21.studio/verify</a><br><br>
     Hash21 · Permanencia para la obra. Soberanía para el artista. ⚡
   </div>
 </div>
