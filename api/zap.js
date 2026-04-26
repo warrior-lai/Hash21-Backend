@@ -41,21 +41,30 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { target, amount, message } = req.body;
+    const { target, lnAddress: directLnAddress, amount, message, comment } = req.body;
     
-    // Input validation
-    if (!target || typeof target !== 'string') {
+    // Input validation — accept 'target' (slug) or 'lnAddress' (direct Lightning Address)
+    const rawTarget = target || directLnAddress;
+    if (!rawTarget || typeof rawTarget !== 'string') {
       return res.status(400).json({ error: 'Missing or invalid target' });
     }
-    if (!amount || typeof amount !== 'number' || amount < 1 || amount > 100000000) {
+    const amt = amount || 0;
+    if (!amt || typeof amt !== 'number' || amt < 1 || amt > 100000000) {
       return res.status(400).json({ error: 'Missing or invalid amount (1-100000000 sats)' });
     }
-    const sanitizedTarget = target.replace(/[^a-zA-Z0-9\-_]/g, '').substring(0, 100);
-    const sanitizedMessage = message ? String(message).substring(0, 255) : '';
+    const sanitizedMessage = (message || comment || '').toString().substring(0, 255);
 
-    // Determine artist
-    const artist = OBRA_ARTIST[sanitizedTarget] || sanitizedTarget;
-    const lnAddress = ARTIST_LN[artist] || ARTIST_LN['lai'];
+    // Determine Lightning Address
+    let lnAddress;
+    if (rawTarget.includes('@')) {
+      // Direct Lightning Address from subastas app
+      lnAddress = rawTarget.substring(0, 200);
+    } else {
+      // Slug-based lookup from main site
+      const sanitizedTarget = rawTarget.replace(/[^a-zA-Z0-9\-_]/g, '').substring(0, 100);
+      const artist = OBRA_ARTIST[sanitizedTarget] || sanitizedTarget;
+      lnAddress = ARTIST_LN[artist] || ARTIST_LN['lai'];
+    }
 
     // Resolve Lightning Address
     const lnurlData = await resolveLnAddress(lnAddress);
